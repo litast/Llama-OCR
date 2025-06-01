@@ -18,6 +18,7 @@ st.markdown("""
 .stApp { background-color: #f8f9fa; }
 .stMarkdown, .stText { color: #000000 !important; }
 .element-container div.stMarkdown p { color: #000000 !important; }
+.title, .subheader { color: #343a40; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -40,7 +41,6 @@ with st.sidebar:
     if uploaded_files and st.button("Izvilkt tekstu 🔍", type="primary"):
         st.session_state['ocr_table_rows'] = []
 
-        
         client = Groq(api_key=st.secrets["API_KEY"])
 
         for uploaded_file in uploaded_files:
