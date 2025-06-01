@@ -3,7 +3,7 @@ from PIL import Image
 import base64
 from groq import Groq
 import pandas as pd
-
+import streamlit as st
 
 # Konfigurācija
 st.set_page_config(
@@ -41,7 +41,8 @@ with st.sidebar:
     if uploaded_files and st.button("Izvilkt tekstu 🔍", type="primary"):
         st.session_state['ocr_table_rows'] = []
 
-        client = Groq(api_key=API_KEY)
+        
+        client = Groq(api_key=st.secrets["API_KEY"])
 
         for uploaded_file in uploaded_files:
             with st.spinner(f"Apstrādā: {uploaded_file.name}"):
@@ -96,10 +97,10 @@ with st.sidebar:
 # Rezultātu tabula
 if 'ocr_table_rows' in st.session_state and st.session_state['ocr_table_rows']:
     df_all = pd.DataFrame(st.session_state['ocr_table_rows'])
-    st.subheader("📊 Strukturēti produkti no visiem attēliem")
+    st.subheader("📊 Strukturēti produktu dati no visiem attēliem")
     st.dataframe(df_all)
 
-    csv = df_all.to_csv(index=False).encode("utf-8")
+    csv = df_all.to_csv(index=False).encode("utf-8-sig")
     st.download_button("⬇️ Lejupielādēt CSV", data=csv, file_name="produktu_tabula.csv", mime="text/csv")
 else:
     st.markdown(
