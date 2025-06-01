@@ -18,12 +18,11 @@ st.markdown("""
 .stApp { background-color: #f8f9fa; }
 .stMarkdown, .stText { color: #000000 !important; }
 .element-container div.stMarkdown p { color: #000000 !important; }
-.title, .subheader { color: #343a40; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
 # Virsraksts
-st.title("🦙 OCR - teksta izvilkšana no attēliem")
+st.markdown("<h1>🦙 OCR - teksta izvilkšana no attēliem</h1>")
 st.markdown("Izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
 
 # Notīrīt
