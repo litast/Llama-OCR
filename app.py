@@ -3,7 +3,6 @@ from PIL import Image
 import base64
 from groq import Groq
 import pandas as pd
-import streamlit as st
 
 # Konfigurācija
 st.set_page_config(
