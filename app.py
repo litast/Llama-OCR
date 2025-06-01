@@ -22,7 +22,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Virsraksts
-st.markdown("<h1>🦙 OCR - teksta izvilkšana no attēliem</h1>")
+st.title("🦙 OCR - teksta izvilkšana no attēliem")
 st.markdown("Izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
 
 # Notīrīt
