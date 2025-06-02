@@ -12,6 +12,37 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Noklusējuma prompta teksts
+default_prompt = """Analizē attēlu un izvelc strukturētu informāciju par visiem redzamajiem produktiem.
+
+Izgūstamie lauki:
+- Produkta veids
+- Produkta nosaukums 
+- Produkta vienība (%/kg/l/ml)
+- Ražotājs (ja ir)
+- Pārdošanas cena
+- Cena par vienību
+- Atlaid (%) (ja ir)
+- Cena pirms atlaides
+- Pārdošanas cena (ar lojalitātes karti) (ja ir)
+- Cena par vienību (ar lojalitātes karti) (ja ir)
+- Valsts (ja ir)
+- Svītrkods (8 vai 13 cipari, sākas ar 0 vai 4)
+
+**Rezultātu attēlo vienā horizontālā Markdown tabulā**:
+- Katra **rinda** ir viens produkts.
+- Katra **kolonna** ir viens no iepriekš minētajiem lauku nosaukumiem, tieši šādā secībā.
+- Nenorādi neko tādu, kas nav redzams vai pilnībā saprotams.
+- Ja informācija nav zināma, ievieto `-`.
+- Cenas pieraksti ar komatu, nevis ar punktu (piemēram, `2,99`).
+- Norādot pārdošanas cenu, nelieto valūtas simbolus (piemēram, € vai EUR).
+
+**Piemērs (strukturāli, ne saturiski):**
+| Produkta veids | Produkta nosaukums | Vienība | Ražotājs     | Pārdošanas cena  | Cena par vienību | Atlaide (%) | Cena pirms atlaides | Pārdošanas cena (ar lojalitātes karti) | Cena par vienību (ar lojalitātes karti) | Valsts  | Svītrkods     |
+|----------------|--------------------|---------|--------------|------------------|------------------|-------------|---------------------|----------------------------------------|-----------------------------------------|---------|---------------|
+| Piens          | Lāse 2%            | 1 l     | Tukuma Piens | 1,29             | 1,29 €/l         | 20          | 1,49                | 1,09                                   | 1,09 €/l                                | Latvija | 4751001001234 |
+"""
+
 # Stils
 st.markdown("""
 <style>
@@ -22,15 +53,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Virsraksts
-st.title("🦙 OCR - teksta izvilkšana no attēliem")
-st.markdown("Izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
+st.title("🦙 Teksta izvilkšana no attēliem")
+st.markdown("Ar llama-4-scout-17b-16e-instruct modeļa palīdzību izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
+
+# Lapas kolonnas
+st.subheader("📝 Prompts")
+with st.expander("Rādīt/Rediģēt", expanded=False):
+    custom_prompt = st.text_area("Rediģēt promptu pirms apstrādes:", value=default_prompt, height=400)
 
 # Notīrīt
 col1, col2 = st.columns([6, 1])
 with col2:
     if st.button("Notīrīt 🗑️"):
-        st.session_state.restart_app = True
+        if 'ocr_table_rows' in st.session_state:
+            del st.session_state['ocr_table_rows']
         st.rerun()
+
+
 
 # Sānu josla: failu augšupielāde
 with st.sidebar:
@@ -54,13 +93,7 @@ with st.sidebar:
                             {
                                 "role": "user",
                                 "content": [
-                                    {"type": "text", "text": f"""Analizē attēlu '{uploaded_file.name}' un izvelc strukturētu informāciju par visiem redzamajiem produktiem.
-                                     Izgūsti: produkta veids, produkta nosaukums, produkta vienība, ražotājs (ja ir), pārdošanas cena, cena par vienību (kg/l/ml), atlaide (ja ir),
-                                     cena pirms atlaides, valsts (ja ir), svītrkods (ja ir). Rezultātu attēlo Markdown tabulā ar vienotu kolonnu nosaukumu katrā rindā.
-                                     Cenai par vienību jābūt skaidri norādītai kā cena par kg, l vai ml. Vienība ir jānorāda kā kg, l vai ml, atkarībā no produkta.
-                                     Pārdošanas cena ir cena, kas tiek maksāta par produktu, un tā var būt ar atlaidi vai bez tās. Valūtu pie pārdošanas cenas nenorādi.
-                                     Svītrkods ir skaitļu virkne, kas sākas ar 0 vai 4, un ir 8 vai 13 cipari garš. Ja informācija nav pieejama, ievelc svītriņu, lai nepaliek tukši lauki.
-                                     Cena izsākāma ar punktu nevis ar komatu."""},
+                                    {"type": "text", "text": custom_prompt},
                                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
                                 ]
                             }
