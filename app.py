@@ -54,7 +54,7 @@ st.markdown("""
 
 # Virsraksts
 st.title("🦙 Teksta izvilkšana no attēliem")
-st.markdown("Ar llama-4-scout-17b-16e-instruct modeļa palīdzību izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
+st.markdown("Ar **llama-4-scout-17b-16e-instruct** modeļa palīdzību izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
 
 # Lapas kolonnas
 st.subheader("📝 Prompts")
