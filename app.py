@@ -29,8 +29,8 @@ st.markdown("Izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, u
 col1, col2 = st.columns([6, 1])
 with col2:
     if st.button("Notīrīt 🗑️"):
-        st.session_state.clear()
-        st.experimental_rerun()
+        st.session_state.restart_app = True
+        st.rerun()
 
 # Sānu josla: failu augšupielāde
 with st.sidebar:
