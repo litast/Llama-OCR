@@ -54,7 +54,7 @@ st.markdown("""
 
 # Virsraksts
 st.title("🦙 Teksta izvilkšana no attēliem")
-st.markdown("Ar llama-4-scout-17b-16e-instruct modeļa palīdzību izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
+st.markdown("Ar **Llama OCR**llama-4-scout-17b-16e-instruct** modeļa palīdzību izvelk strukturētu tekstu no attēliem, piemēram, cenu zīmēm, un apvieno rezultātus salīdzināmā tabulā.")
 
 # Lapas kolonnas
 st.subheader("📝 Prompts")
@@ -136,6 +136,6 @@ if 'ocr_table_rows' in st.session_state and st.session_state['ocr_table_rows']:
 else:
     st.markdown(
         "<p style='color: #333; background-color: #e9ecef; padding: 10px; border-radius: 5px;'>"
-        "Augšupielādē attēlus un spied 'Izvilkt tekstu', lai iegūtu tabulu ar produktiem."
+        "Augšupielādē attēlus un spied **Izvilkt tekstu**, lai iegūtu tabulu ar produktiem."
         "</p>", unsafe_allow_html=True
     )
