@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 *_old.py
 .streamlit/secrets.toml
+llamaocr-c8c9f2801d4f.json
