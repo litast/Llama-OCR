@@ -22,7 +22,7 @@ Izgūstamie lauki:
 - Ražotājs (ja ir)
 - Pārdošanas cena
 - Cena par vienību
-- Atlaid (%) (ja ir)
+- Atlaide (%) (ja ir)
 - Cena pirms atlaides
 - Pārdošanas cena (ar lojalitātes karti) (ja ir)
 - Cena par vienību (ar lojalitātes karti) (ja ir)
@@ -58,7 +58,7 @@ st.markdown("Ar **llama-4-scout-17b-16e-instruct** modeļa palīdzību izvelk st
 
 # Lapas kolonnas
 st.subheader("📝 Prompts")
-with st.expander("Rādīt/Rediģēt", expanded=False):
+with st.expander("Konfigurēt", expanded=False):
     custom_prompt = st.text_area("Rediģēt promptu pirms apstrādes:", value=default_prompt, height=400)
 
 # Notīrīt
@@ -68,8 +68,6 @@ with col2:
         if 'ocr_table_rows' in st.session_state:
             del st.session_state['ocr_table_rows']
         st.rerun()
-
-
 
 # Sānu josla: failu augšupielāde
 with st.sidebar:
