@@ -52,7 +52,7 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Cena: norādi standarta cenu pirms akcijas atlaides, bez lojalitātes kartes.
 - Atlaide: norādi tikai, ja ir norādīts cenas samazinājums procentos (%).
 - Ja cenu zīmē ir norādīta cena ar `Mans Rimi karti`, `Paldies karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
-- Produkta vienība un mērvienība parasti ir redzama produkta nosaukuma beigās, piemēram 0.5l atbilst 0.5 un Litrs.
+- Produkta vienība un mērvienība parasti ir redzama produkta nosaukuma beigās, piemēram 0.5l atbilst 0.5 (produkta vienība) un Litrs (mērvienība), 10gab atbilst 10 (produkta vienība) un Gab. (mērvienība).
 - Svītrkods parasti ir izvietots zem vai pa labi no stabiņveida līnijām.
 - Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ražotāja nosaukumu, lojalitātes kartes nosaukumu.
 - Aiz kolonnas Svītrkods nav jābūt citā kolonnām, kas varētu dublēt iepriekšējo informāciju.
