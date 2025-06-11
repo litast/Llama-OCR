@@ -51,11 +51,11 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Norādot cenas, izmanto komatu kā decimālatdalītāju (piemēram, 2,99).
 - Norādot cenas, nelieto valūtas simbolus (piemēram, € vai EUR).
 - Cena: norādi standarta cenu pirms akcijas atlaides, bez lojalitātes kartes.
-- Atlaide: norādi procentuālo atlaidi, ja tā ir pieejama. Balstoties uz citu norādīto informāciju atlaide nav jāaprēķina.
-- Ja cena ar `Mans Rimi karte` vai līdzīgu lojalitātes karti ir norādīta, ievieto to `Cena ar klienta karti` laukā.
-- Produkta vienība un mērvienība parasti ir redzama produkta nosaukuma beigās, piemērmam 0,5l atbilst 0,5 un Litrs.
+- Atlaide: norādi tikai, ja ir norādīts cenas samazinājums procentos (%).
+- Ja cenu zīmē ir norādīta cena ar `Mans Rimi karti`, `Paldies karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
+- Produkta vienība un mērvienība parasti ir redzama produkta nosaukuma beigās, piemēram 0,5l atbilst 0,5 un Litrs.
 - Svītrkods parasti ir izvietots zem vai pa labi no stabiņveida līnijām.
-- Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ražotāja nosaukumu.
+- Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ražotāja nosaukumu, lojalitātes kartes nosaukumu.
 - Lauks Grozs vienmēr ir `0`.
 - Aiz kolonnas Svītrkods nav jābūt citā kolonnām, kas varētu dublēt iepriekšējo informāciju.
 """
