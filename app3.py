@@ -25,38 +25,36 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Kategorija (Memorands)
 - Grupa (Memorands) — viens no: 01.1.1.3. Maize, 01.1.4.2. Piens, 01.1.4.5. Siers un biezpiens, 01.1.5.2. Sviests, 01.1.4.6. Krējums, 01.1.4.4. Jogurts, 01.1.4.5. Svaigi dārzeņi, 01.1.7.4. Kartupeļi, 01.1.6.1. Svaigi augļi, 01.1.2.2. Cūkgaļa, 01.1.2.4. Mājputnu gaļa, 01.1.2.1. Liellopu un teļa gaļa, 01.1.2.3. Aitu un kazu gaļa, 01.1.3.1. Svaiga zivis, 01.1.1.2. Milti, citi graudaugi, 01.1.4.7. Olas, 01.1.5.  Augu eļļa
 - Veids (Memorands) — viens no: Baltmaize, Rupjmaize, Piens (pasterizēts), Siers, Biezpiens, Sviests, Krējums, Jogurts, Kefīrs, Paniņas, Sīpoli, BurkāniĶiploki, Bietes, Tomāti, Gurķi, Galviņkāposti, Ziedkāposti, Lapu salāti, Ķirbji, Kabači, Kartupeļi, Āboli, Bumbieri, Zemenes, Dzērvenes, Brūklenes, Krūmmellenes, Jāņogas, Upenes, Avenes, Cūkgaļa, Cūkgaļa - malta, Mājputnu gaļa, Mājputnu gaļa (malta), Liellopu gaļa, Teļa gaļa, Aitu gaļa, Kazu gaļa, Zivis - svaigas, Zivis - atdzesētas, Kviešu milti, Pilngraudu milti, Griķi, Vistu olas, Olīveļļa, Rapšu eļļa, Saulespuķu eļļa (ja var noteikt)
-- Preces nosaukums, info (veikalā)
+- Preces nosaukums, info (veikalā) (arī ražotāja nosaukumu, ja ir)
 - Ražotāja valsts (ja ir)
 - Cena
-- Atlaide (%) (ja ir) # ---
+- Atlaide (%) (ja ir) #--
 - Cena ar atlaidi (ja ir)
-- Produkta vienība # ---
-- Mērvienība (Kg, Grami, Litrs, Mililitri)
-- Cena par vienību # ---
-- Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml) # ---
+- Mērvienība (Kg, g = Grami, l = Litrs, ml - Mililitri, Gab.)
+- Produkta vienība
+- Cena par vienību
+- Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml) #--
 - Cena ar klienta karti (ja ir)
-- Cena par vienību ar klienta karti (ja ir) # ---
-- Grozs
-- Piezīme (ja ir, piemēram, ražotāja nosaukums)
-- Svītrkods (EAN-13 formātā, bez punktiem un atstarpēm) # ---
+- Cena par vienību ar klienta karti (ja ir)
+- Grozs: vienmēr ir tukšs lauks
+- Piezīmes (piemēram, lojalitātes kartes nosaukums utt.)
+- Svītrkods (EAN-13 formātā, bez punktiem un atstarpēm) #--
 
 **Rezultātu attēlo vienā horizontālā Markdown tabulā**:
 - Nenorādi nekādas kolonnas ārpus šī saraksta.
 - Katra **rinda** ir viens produkts.
 - Katra **kolonna** ir viens no iepriekš minētajiem laukiem, tieši šādā secībā.
-- Nenorādi neko tādu, kas nav skaidri redzams vai pilnībā saprotams. Ja tas tā ir, ievieto `-`.
-- Grupa (Memorands) un Veids (Memorands) — izvēlies tikai no saraksta, ja prece tam atbilst; ja nē — ievieto `-`.
+- Nenorādi neko tādu, kas nav skaidri redzams vai pilnībā saprotams. Ja tas tā ir, atstāj tukšu lauku.
+- Grupa (Memorands) un Veids (Memorands) — izvēlies tikai no saraksta, ja prece tam atbilst; ja nē — atstāj tukšu lauku.
 - Ja prece atrodas starp memoranda grupām, tad Groza prece ir `1`. Visas pārējās preces ir `0`.
 - Nosakot kategoriju (memoranda), izvēlies kādu no sekojošām vērtībām - Maize, Piens, Piena produkti, Dārzeņi (svaigi), Augļi, ogas (svaigas), Gaļa, Zivis (svaigas), Milti, graudaugi, Olas, Eļļa (augu).
-- Norādot cenas, izmanto komatu kā decimālatdalītāju (piemēram, 2,99).
 - Norādot cenas, nelieto valūtas simbolus (piemēram, € vai EUR).
 - Cena: norādi standarta cenu pirms akcijas atlaides, bez lojalitātes kartes.
 - Atlaide: norādi tikai, ja ir norādīts cenas samazinājums procentos (%).
 - Ja cenu zīmē ir norādīta cena ar `Mans Rimi karti`, `Paldies karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
-- Produkta vienība un mērvienība parasti ir redzama produkta nosaukuma beigās, piemēram 0,5l atbilst 0,5 un Litrs.
+- Produkta vienība un mērvienība parasti ir redzama produkta nosaukuma beigās, piemēram 0.5l atbilst 0.5 un Litrs.
 - Svītrkods parasti ir izvietots zem vai pa labi no stabiņveida līnijām.
 - Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ražotāja nosaukumu, lojalitātes kartes nosaukumu.
-- Lauks Grozs vienmēr ir `0`.
 - Aiz kolonnas Svītrkods nav jābūt citā kolonnām, kas varētu dublēt iepriekšējo informāciju.
 """
 
@@ -136,7 +134,7 @@ def process_image(uploaded_file, use_metadata, custom_prompt, employee, merchant
                         "Darbinieks": employee,
                         "Tirgotājs": merchant,
                         "Pilsēta": city,
-                        "Veikala adrese": store_address
+                        "Veikals (nosaukums vai adrese)": store_address
                     }
                     for h, v in zip(header, values):
                         row[h] = v
@@ -224,14 +222,14 @@ with col_btn2:
 if 'ocr_table_rows' in st.session_state and st.session_state['ocr_table_rows']:
     df_all = pd.DataFrame(st.session_state['ocr_table_rows'])
 
-    # 🔽 Komatu aizvietošana cenām
+    # Decimālatdalītāja aizvietošana cenām
     cena_kolonnas = [
         "Cena", "Cena ar atlaidi", "Cena par vienību",
         "Cena ar klienta karti", "Cena par vienību ar klienta karti"
     ]
     for kol in cena_kolonnas:
         if kol in df_all.columns:
-            df_all[kol] = df_all[kol].astype(str).str.replace('.', ',', regex=False)
+            df_all[kol] = df_all[kol].astype(str).str.replace(',', '.', regex=False)
 
     # Izveidojot dubulto virsrakstu (multi-index)
     double_header_map = {}
