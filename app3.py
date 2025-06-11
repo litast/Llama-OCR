@@ -30,7 +30,7 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Cena
 - Atlaide (%) (ja ir) #--
 - Cena ar atlaidi (ja ir)
-- Mērvienība (Kg, Grami, Litrs, Mililitri, Gab.)
+- Mērvienība — viens no: Kg, Grami, Litrs, Mililitri, Gab.
 - Produkta vienība
 - Cena par vienību
 - Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml) #--
