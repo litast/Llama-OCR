@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 import unicodedata
 
-## Šī ir app3.py identiska kopija **
+## Šī ir app3.py bet cita kolonnu secība **
 
 # Konfigurācija
 st.set_page_config(
@@ -22,41 +22,37 @@ st.set_page_config(
 default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu informāciju par produktiem.
 
 **Katram produktam izgūstamie lauki**:
-(Obligāti ievēro tieši šādu lauku secību un nosaukumus)
-- Groza prece (1 = jā, 0 = nē)
-- Kategorija (Memorands)
-- Grupa (Memorands) — viens no: 01.1.1.3. Maize, 01.1.4.2. Piens, 01.1.4.5. Siers un biezpiens, 01.1.5.2. Sviests, 01.1.4.6. Krējums, 01.1.4.4. Jogurts, 01.1.4.5. Svaigi dārzeņi, 01.1.7.4. Kartupeļi, 01.1.6.1. Svaigi augļi, 01.1.2.2. Cūkgaļa, 01.1.2.4. Mājputnu gaļa, 01.1.2.1. Liellopu un teļa gaļa, 01.1.2.3. Aitu un kazu gaļa, 01.1.3.1. Svaiga zivis, 01.1.1.2. Milti, citi graudaugi, 01.1.4.7. Olas, 01.1.5.  Augu eļļa
-- Veids (Memorands) — viens no: Baltmaize, Rupjmaize, Piens (pasterizēts), Siers, Biezpiens, Sviests, Krējums, Jogurts, Kefīrs, Paniņas, Sīpoli, BurkāniĶiploki, Bietes, Tomāti, Gurķi, Galviņkāposti, Ziedkāposti, Lapu salāti, Ķirbji, Kabači, Kartupeļi, Āboli, Bumbieri, Zemenes, Dzērvenes, Brūklenes, Krūmmellenes, Jāņogas, Upenes, Avenes, Cūkgaļa, Cūkgaļa - malta, Mājputnu gaļa, Mājputnu gaļa (malta), Liellopu gaļa, Teļa gaļa, Aitu gaļa, Kazu gaļa, Zivis - svaigas, Zivis - atdzesētas, Kviešu milti, Pilngraudu milti, Griķi, Vistu olas, Olīveļļa, Rapšu eļļa, Saulespuķu eļļa (ja var noteikt)
-- Preces nosaukums, info (veikalā) (arī ražotāja nosaukumu, ja ir)
-- Ražotāja valsts (ja ir)
-- Cena
-- Atlaide (%) (ja ir) #--
-- Cena ar atlaidi (ja ir)
-- Mērvienība (Kg, Grami, Litrs, Mililitri)
-- Produkta vienība, piemēram, 0.5l ir 0.5
-- Cena par vienību
-- Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml) #--
-- Cena ar klienta karti (ja ir)
-- Cena par vienību ar klienta karti (ja ir)
-- Grozs: vienmēr ir tukšs lauks
-- Piezīmes (piemēram, lojalitātes kartes nosaukums utt.)
-- Svītrkods (EAN-13 formātā, bez punktiem un atstarpēm) #--
+(Obligāti ievēro tieši šādu lauku secību un nosaukumus).
+- Groza prece (vinmēr tukšs lauks).
+- Kategorija (Memorands) — izvēlies no saraksta, ja prece tam atbilst: `Maize`, `Piens`, `Piena produkti`, `Dārzeņi (svaigi)`, `Augļi, ogas (svaigas)`, `Gaļa`, `Zivis (svaigas)`, `Milti, graudaugi`, `Olas`, `Eļļa (augu)`; ja nē — atstāj tukšu lauku.
+- Grupa (Memorands) — izvēlies no saraksta, ja prece tam atbilst: `01.1.1.3. Maize`, `01.1.4.2. Piens`, `01.1.4.5. Siers un biezpiens`, `01.1.5.2. Sviests`, `01.1.4.6. Krējums`, `01.1.4.4. Jogurts`, `01.1.4.5. Svaigi dārzeņi`, `01.1.7.4. Kartupeļi`, `01.1.6.1. Svaigi augļi`, `01.1.2.2. Cūkgaļa`, `01.1.2.4. Mājputnu gaļa`, `01.1.2.1. Liellopu un teļa gaļa`, `01.1.2.3. Aitu un kazu gaļa`, `01.1.3.1. Svaiga zivis`, `01.1.1.2. Milti, citi graudaugi`, `01.1.4.7. Olas`, `01.1.5.  Augu eļļa`; ja nē — atstāj tukšu lauku.
+- Veids (Memorands) — izvēlies no saraksta, ja prece tam atbilst: Baltmaize, Rupjmaize, Piens (pasterizēts), Siers, Biezpiens, Sviests, Krējums, Jogurts, Kefīrs, Paniņas, Sīpoli, BurkāniĶiploki, Bietes, Tomāti, Gurķi, Galviņkāposti, Ziedkāposti, Lapu salāti, Ķirbji, Kabači, Kartupeļi, Āboli, Bumbieri, Zemenes, Dzērvenes, Brūklenes, Krūmmellenes, Jāņogas, Upenes, Avenes, Cūkgaļa, Cūkgaļa - malta, Mājputnu gaļa, Mājputnu gaļa (malta), Liellopu gaļa, Teļa gaļa, Aitu gaļa, Kazu gaļa, Zivis - svaigas, Zivis - atdzesētas, Kviešu milti, Pilngraudu milti, Griķi, Vistu olas, Olīveļļa, Rapšu eļļa, Saulespuķu eļļa; ja nē — atstāj tukšu lauku.
+- Preces nosaukums, info (veikalā) (arī ražotāja nosaukumu, ja ir).
+- Ražotāja valsts (ja ir).
+- Cena.
+- Cena ar atlaidi (ja ir).
+- Mērvienība (Grami, Kg, Litrs, Mililitri) - norādi mērvinību, kas norādīta produkta nosaukumā.
+- Produkta vienība, piemēram, 0.5l ir 0.5.
+- Cena par vienību.
+- Cena ar klienta karti (ja ir).
+- Cena par vienību ar klienta karti (ja ir).
+- Grozs: vienmēr ir tukšs lauks.
+- Piezīmes.
+- Svītrkods (EAN-13 formātā, bez punktiem un atstarpēm).
+- Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml).
 
 **Rezultātu attēlo vienā horizontālā Markdown tabulā**:
 - Nenorādi nekādas kolonnas ārpus šī saraksta.
 - Katra **rinda** ir viens produkts.
 - Katra **kolonna** ir viens no iepriekš minētajiem laukiem, tieši šādā secībā.
 - Nenorādi neko tādu, kas nav skaidri redzams vai pilnībā saprotams. Ja tas tā ir, atstāj tukšu lauku.
-- Grupa (Memorands) un Veids (Memorands) — izvēlies tikai no saraksta, ja prece tam atbilst; ja nē — atstāj tukšu lauku.
 - Ja prece atrodas starp memoranda grupām, tad Groza prece ir `1`. Visas pārējās preces ir `0`.
-- Nosakot kategoriju (memoranda), izvēlies kādu no sekojošām vērtībām - Maize, Piens, Piena produkti, Dārzeņi (svaigi), Augļi, ogas (svaigas), Gaļa, Zivis (svaigas), Milti, graudaugi, Olas, Eļļa (augu).
 - Norādot cenas, nelieto valūtas simbolus (piemēram, € vai EUR).
 - Cena: norādi standarta cenu pirms akcijas atlaides, bez lojalitātes kartes.
 - Atlaide: norādi tikai, ja ir norādīts cenas samazinājums procentos (%).
 - Ja cenu zīmē ir norādīta cena ar `Mans Rimi karti`, `Paldies karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
 - Svītrkods parasti ir izvietots zem vai pa labi no stabiņveida līnijām.
-- Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ražotāja nosaukumu, lojalitātes kartes nosaukumu.
-- Aiz kolonnas Svītrkods nav jābūt citā kolonnām, kas varētu dublēt iepriekšējo informāciju.
+- Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ja ir norādīta - atlaide (%), lojalitātes kartes nosaukumu.
 """
 
 # Palīgfunkcijas
