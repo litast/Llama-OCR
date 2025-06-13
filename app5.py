@@ -13,7 +13,7 @@ import unicodedata
 
 # Konfigurācija
 st.set_page_config(
-    page_title="Llama OCR - teksta izvilkšana",
+    page_title="Llama OCR - teksta izvilkšana v5",
     page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded"
