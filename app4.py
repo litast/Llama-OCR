@@ -33,9 +33,9 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Cena ar atlaidi - nav redzama, vienmēr atstāj tukšu.
 - Mērvienība (Grami, Kg, Litrs, Mililitri) - norādi mērvienību, kas norādīta produkta nosaukumā.
 - Produkta vienība, piemēram, 0.5l ir 0.5.
-- Cena par vienību.
+- Cena par vienību - parasti blakus vai zem gabala cenas, sīks teksts.
 - Cena ar klienta karti (ja ir) - cena, kas atrodama uz dzeltena fona un blakus tai norādīts `ar DEPO karti`.
-- Cena par vienību ar klienta karti (ja ir).
+- Cena par vienību ar klienta karti (ja ir) - parasti blakus vai zem kartes cenas, sīks teksts.
 - Grozs: vienmēr ir tukšs lauks.
 - Piezīmes.
 - Svītrkods (EAN-13 formātā, bez punktiem un atstarpēm).
@@ -50,10 +50,8 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Ja prece atrodas starp memoranda grupām, tad Groza prece ir `1`. Visas pārējās preces ir `0`.
 - Norādot cenas, nelieto valūtas simbolus (piemēram, € vai EUR).
 - Cena: norādi standarta cenu pirms akcijas atlaides, bez lojalitātes kartes.
-- Atlaide: norādi tikai, ja ir norādīts cenas samazinājums procentos (%).
-- Ja cenu zīmē ir norādīta cena ar `Mans Rimi karti`, `Paldies karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
-- Svītrkods parasti ir izvietots zem vai pa labi no stabiņveida līnijām.
-- Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ja ir norādīta - atlaide (%), lojalitātes kartes nosaukumu.
+- Ja cenu zīmē ir norādīta cena ar `DEPO karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
+- Svītrkods parasti ir izvietots blakus  stabiņveida līnijām, cipari var būt sagriezti. Bieži sākas ar `475`, bet var būt arī cits sākums.
 """
 
 # Palīgfunkcijas
