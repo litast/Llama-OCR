@@ -29,12 +29,12 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Veids (Memorands) — izvēlies no saraksta, ja prece tam atbilst: Baltmaize, Rupjmaize, Piens (pasterizēts), Siers, Biezpiens, Sviests, Krējums, Jogurts, Kefīrs, Paniņas, Sīpoli, BurkāniĶiploki, Bietes, Tomāti, Gurķi, Galviņkāposti, Ziedkāposti, Lapu salāti, Ķirbji, Kabači, Kartupeļi, Āboli, Bumbieri, Zemenes, Dzērvenes, Brūklenes, Krūmmellenes, Jāņogas, Upenes, Avenes, Cūkgaļa, Cūkgaļa - malta, Mājputnu gaļa, Mājputnu gaļa (malta), Liellopu gaļa, Teļa gaļa, Aitu gaļa, Kazu gaļa, Zivis - svaigas, Zivis - atdzesētas, Kviešu milti, Pilngraudu milti, Griķi, Vistu olas, Olīveļļa, Rapšu eļļa, Saulespuķu eļļa; ja nē — atstāj tukšu lauku.
 - Preces nosaukums, info (veikalā) (arī ražotāja nosaukumu, ja ir).
 - Ražotāja valsts (ja ir).
-- Cena.
-- Cena ar atlaidi (ja ir).
-- Mērvienība (Grami, Kg, Litrs, Mililitri) - norādi mērvinību, kas norādīta produkta nosaukumā.
+- Cena - cena, kas nav īpaši izcelta ar krāsu (šajā gadījumā – cena melnā krāsā bez fona).
+- Cena ar atlaidi - nav redzama, vienmēr atstāj tukšu.
+- Mērvienība (Grami, Kg, Litrs, Mililitri) - norādi mērvienību, kas norādīta produkta nosaukumā.
 - Produkta vienība, piemēram, 0.5l ir 0.5.
 - Cena par vienību.
-- Cena ar klienta karti (ja ir).
+- Cena ar klienta karti (ja ir) - cena, kas atrodama uz dzeltena fona un blakus tai norādīts `ar DEPO karti`.
 - Cena par vienību ar klienta karti (ja ir).
 - Grozs: vienmēr ir tukšs lauks.
 - Piezīmes.
@@ -42,6 +42,7 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml).
 
 **Rezultātu attēlo vienā horizontālā Markdown tabulā**:
+- Ignorēt cenu uz oranžā fona, kas attiecas uz vairāku preču pirkumu.
 - Nenorādi nekādas kolonnas ārpus šī saraksta.
 - Katra **rinda** ir viens produkts.
 - Katra **kolonna** ir viens no iepriekš minētajiem laukiem, tieši šādā secībā.
@@ -146,7 +147,7 @@ def remove_diacritics(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text) if not unicodedata.combining(c))
 
 # UI
-st.title("🖼️ Teksta izvilkšana no attēliem")
+st.title("🖼️ Teksta izvilkšana no attēliem (DEPO)")
 st.markdown("Ar **llama-4-scout-17b-16e-instruct** palīdzību izvelk produktus no attēliem un parāda salīdzināmā tabulā.")
 
 # Sānu josla
@@ -162,10 +163,10 @@ with st.sidebar:
         date_value = None
         time_value = None
 
-    merchant = st.selectbox("🏪 Tirgotājs", ["Maxima", "Rimi", "Lidl", "Top!", "Elvi", "Depo", "Narvesen"])
+    merchant = st.selectbox("🏪 Tirgotājs", ["Maxima", "Rimi", "Lidl", "Top!", "Elvi", "Depo", "Narvesen"], index=5)
     city = st.selectbox("🌆 Pilsēta", ["Rīga", "Daugavpils", "Liepāja", "Jelgava", "Valmiera"])
     store_address = st.text_input("📍 Veikala adrese (obligāti)", placeholder="Norādi veikala adresi vai nosaukumu")
-    uploaded_files = st.file_uploader("🖼️ Izvēlies attēlus", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
+    uploaded_files = st.file_uploader("🖼️ Izvēlies attēlus", type=['jpg', 'jpeg'], accept_multiple_files=True)
     process = st.button("Izvilkt tekstu 🔍", type="primary")
 
 # Uzvedne
