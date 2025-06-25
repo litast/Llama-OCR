@@ -51,7 +51,7 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Norādot cenas, nelieto valūtas simbolus (piemēram, € vai EUR).
 - Cena: norādi standarta cenu pirms akcijas atlaides, bez lojalitātes kartes.
 - Ja cenu zīmē ir norādīta cena ar `DEPO karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
-- Svītrkods parasti ir izvietots blakus  stabiņveida līnijām, cipari var būt sagriezti. Bieži sākas ar `475`, bet var būt arī cits sākums.
+- Svītrkods parasti ir izvietots blakus stabiņveida līnijām, cipari var būt sagriezti. Bieži sākas ar `475`, bet var būt arī cits sākums.
 """
 
 # Palīgfunkcijas
