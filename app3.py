@@ -31,15 +31,17 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Ražotāja valsts (ja ir).
 - Cena.
 - Cena ar atlaidi (ja ir).
-- Mērvienība (Grami, Kg, Litrs, Mililitri) - norādi mērvinību, kas norādīta produkta nosaukumā.
+- Mērvienība (Grami, Kg, Litrs, Mililitri, Gab.) - norādi mērvinību, kas norādīta produkta nosaukumā.
 - Produkta vienība, piemēram, 0.5l ir 0.5.
 - Cena par vienību.
 - Cena ar klienta karti (ja ir).
 - Cena par vienību ar klienta karti (ja ir).
-- Grozs: vienmēr ir tukšs lauks.
+- Grozs: tukšs lauks.
+- Groza redzamība: tukšs lauks.
+- Preces pieejamība veikalā: tukšs lauks.
 - Piezīmes.
 - Svītrkods (EAN-13 formātā, bez punktiem un atstarpēm).
-- Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml).
+- Mērvienība par vienību (€/L, €/Kg, €/Gab.).
 
 **Rezultātu attēlo vienā horizontālā Markdown tabulā**:
 - Nenorādi nekādas kolonnas ārpus šī saraksta.
