@@ -31,15 +31,17 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Ražotāja valsts (ja ir).
 - Cena - cena, kas nav īpaši izcelta ar krāsu (šajā gadījumā – cena melnā krāsā bez fona).
 - Cena ar atlaidi - nav redzama, vienmēr atstāj tukšu.
-- Mērvienība (Grami, Kg, Litrs, Mililitri) - norādi mērvienību, kas norādīta produkta nosaukumā.
+- Mērvienība (Grami, Kg, Litrs, Mililitri, Gab.) - norādi mērvienību, kas norādīta produkta nosaukumā.
 - Produkta vienība, piemēram, 0.5l ir 0.5.
 - Cena par vienību - parasti blakus vai zem gabala cenas, sīks teksts.
 - Cena ar klienta karti (ja ir) - cena, kas atrodama uz dzeltena fona un blakus tai norādīts `ar DEPO karti`.
 - Cena par vienību ar klienta karti (ja ir) - parasti blakus vai zem kartes cenas, sīks teksts.
-- Grozs: vienmēr ir tukšs lauks.
+- Grozs: tukšs lauks.
+- Groza redzamība: tukšs lauks.
+- Preces pieejamība veikalā: tukšs lauks.
 - Piezīmes.
 - Svītrkods (EAN-13 formātā, bez punktiem un atstarpēm).
-- Mērvienība par vienību (€/l, €/Kg, €/Gab., €/ml).
+- Mērvienība par vienību (€/L, €/Kg, €/Gab.).
 
 **Rezultātu attēlo vienā horizontālā Markdown tabulā**:
 - Ignorēt cenu uz oranžā fona, kas attiecas uz vairāku preču pirkumu.
@@ -161,8 +163,8 @@ with st.sidebar:
         date_value = None
         time_value = None
 
-    merchant = st.selectbox("🏪 Tirgotājs", ["Maxima", "Rimi", "Lidl", "Top!", "Elvi", "Depo", "Narvesen"], index=5)
-    city = st.selectbox("🌆 Pilsēta", ["Rīga", "Daugavpils", "Liepāja", "Jelgava", "Valmiera"])
+    merchant = st.selectbox("🏪 Tirgotājs", ["MAXIMA", "RIMI", "LIDL", "TOP", "ELVI", "DEPO", "NARVESEN"], index=5)
+    city = st.selectbox("🌆 Pilsēta", ["Rīga", "Piņķi", "Daugavpils", "Liepāja", "Jelgava", "Valmiera"])
     store_address = st.text_input("📍 Veikala adrese (obligāti)", placeholder="Norādi veikala adresi vai nosaukumu")
     uploaded_files = st.file_uploader("🖼️ Izvēlies attēlus", type=['jpg', 'jpeg'], accept_multiple_files=True)
     process = st.button("Izvilkt tekstu 🔍", type="primary")
