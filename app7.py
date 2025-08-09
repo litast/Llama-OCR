@@ -165,7 +165,7 @@ with st.sidebar:
         time_value = None
 
     merchant = st.selectbox("🏪 Tirgotājs", ["MAXIMA", "RIMI", "LIDL", "TOP", "ELVI", "DEPO", "NARVESEN"])
-    city = st.selectbox("🌆 Pilsēta", ["Rīga", "Piņķi", "Daugavpils", "Liepāja", "Jelgava", "Valmiera"])
+    city = st.selectbox("🌆 Pilsēta", ["Rīga", "Piņķi", "Daugavpils", "Liepāja", "Jelgava", "Jaunolaine", "Olaine", "Valmiera"])
     store_address = st.text_input("📍 Veikala adrese (obligāti)", placeholder="Norādi veikala adresi vai nosaukumu")
     uploaded_files = st.file_uploader("🖼️ Izvēlies attēlus", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
     process = st.button("Izvilkt tekstu 🔍", type="primary")
