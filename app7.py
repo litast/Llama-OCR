@@ -8,6 +8,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 import unicodedata
+import os
 
 ## Šī ir app3.py bet cita kolonnu secība **
 
@@ -60,19 +61,49 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 # Palīgfunkcijas
 def extract_datetime_from_metadata(uploaded_file):
     try:
+        # Pārliecināmies, ka faila sākums tiek iestatīts uz 0, lai to pareizi nolasītu
+        uploaded_file.seek(0)
+
         image = Image.open(uploaded_file)
+
+        # Pārbaudām, vai attēlam ir EXIF dati
+        if image.getexif() is None:
+            return None, None, None, None, None
+        
         exif = {
             ExifTags.TAGS.get(k, k): v for k, v in image.getexif().items()
         }
-        if "DateTimeOriginal" in exif:
-            dt_str = exif["DateTimeOriginal"]
-            dt = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
-            return dt.date(), dt.time(), exif.get("Compression", None)
-        else:
-            return None, None, exif.get("Compression", None)
+
+        # Apple/iPhone un citi bieži izmanto "DateTimeOriginal"
+        dt_str = exif.get("DateTimeOriginal")
+
+        # Ja nav DateTimeOriginal, mēģinām izmantot "DateTime" (modifikācijas datums)
+        if dt_str is None:
+            dt_str = exif.get("DateTime")
+        
+        dt = None
+        if dt_str:
+            try:
+                # Standarta EXIF datuma/laika formāts
+                dt = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
+            except ValueError:
+                # Ja formāts ir cits, piemēram, nestandarta, var veikt papildu mēģinājumus šeit
+                pass
+
+        date_val = dt.date() if dt else None
+        time_val = dt.time() if dt else None
+            
+        # Iegūstam papildu metadatus
+        compression = exif.get("Compression", None)
+        make = exif.get("Make", None)        # Ražotājs (piemēram, Apple)
+        model = exif.get("Model", None)      # Modelis (piemēram, iPhone 15 Pro Max)
+            
+        # Atgriežam datumu, laiku, kompresiju, ražotāju un modeli
+        return date_val, time_val, compression, make, model
+    
     except Exception as e:
         st.warning(f"EXIF kļūda: {e}")
-        return None, None, None
+        return None, None, None, None, None
 
 def extract_datetime_from_filename(filename):
     match = re.search(r"(\d{8})[_-](\d{6})", filename)
@@ -89,8 +120,8 @@ def process_image(uploaded_file, use_metadata, custom_prompt, employee, merchant
 
         # Iegūt datumu un laiku no EXIF, faila nosaukuma vai ievades
         if use_metadata:
-            date_val, time_val, compression = extract_datetime_from_metadata(uploaded_file)
-
+            date_val, time_val, compression, make, model = extract_datetime_from_metadata(uploaded_file) # Izsaukums labots!
+            
             if date_val is None or time_val is None:
                 date_val_fname, time_val_fname = extract_datetime_from_filename(uploaded_file.name)
 
@@ -101,7 +132,10 @@ def process_image(uploaded_file, use_metadata, custom_prompt, employee, merchant
         else:
             date_val = date_value
             time_val = time_value
-
+            # Ja netiek izmantoti metadati, make un model ir None
+            make = None
+            model = None
+        
         # Formatējam datumu un laiku kā tekstu vai tukšu, ja nav
         date_str = date_val.strftime("%d.%m.%Y") if date_val else ""
         time_str = time_val.strftime("%H:%M") if time_val else ""
@@ -167,7 +201,7 @@ with st.sidebar:
     merchant = st.selectbox("🏪 Tirgotājs", ["MAXIMA", "RIMI", "LIDL", "TOP", "ELVI", "DEPO", "NARVESEN"])
     city = st.selectbox("🌆 Pilsēta", ["Rīga", "Piņķi", "Daugavpils", "Liepāja", "Jelgava", "Jaunolaine", "Olaine", "Valmiera"])
     store_address = st.text_input("📍 Veikala adrese (obligāti)", placeholder="Norādi veikala adresi vai nosaukumu")
-    uploaded_files = st.file_uploader("🖼️ Izvēlies attēlus", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
+    uploaded_files = st.file_uploader("🖼️ Izvēlies attēlus", type=None, accept_multiple_files=True)
     process = st.button("Izvilkt tekstu 🔍", type="primary")
 
 # Uzvedne
