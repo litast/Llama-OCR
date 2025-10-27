@@ -14,7 +14,7 @@ import os
 
 # Konfigurācija
 st.set_page_config(
-    page_title="Llama OCR - teksta izvilkšana v4",
+    page_title="Llama OCR - teksta izvilkšana v4 (DEPO)",
     page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded"
