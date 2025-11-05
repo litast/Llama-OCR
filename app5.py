@@ -8,7 +8,8 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 import unicodedata
-import os
+from PIL import Image
+import io, base64
 
 ## Šī ir app3.py bet cita kolonnu secība **
 
@@ -113,9 +114,32 @@ def extract_datetime_from_filename(filename):
         return dt.date(), dt.time()
     return None, None
 
+def resize_image_if_needed(uploaded_file, max_size=(1024, 1024)):
+    """Resize image to avoid 413 errors, but skip PNGs."""
+    try:
+        image = Image.open(uploaded_file)
+        
+        # Detect image format
+        if image.format == "PNG":
+            # Return original PNG bytes — no resizing
+            uploaded_file.seek(0)
+            return uploaded_file.read()
+        
+        # For JPEG or others — resize
+        image.thumbnail(max_size, Image.LANCZOS)
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG", quality=70, optimize=True)
+        return buffer.getvalue()
+        
+    except Exception as e:
+        st.error(f"❌ Neizdevās samazināt attēlu: {e}")
+        uploaded_file.seek(0)
+        return uploaded_file.read()
+    
 def process_image(uploaded_file, use_metadata, custom_prompt, employee, merchant, city, store_address, date_value, time_value, client):
     try:
-        image_bytes = uploaded_file.getvalue()
+        #image_bytes = uploaded_file.getvalue()
+        image_bytes = resize_image_if_needed(uploaded_file)
         base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
         # Iegūt datumu un laiku no EXIF, faila nosaukuma vai ievades
