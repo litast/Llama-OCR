@@ -5,21 +5,20 @@ from groq import Groq
 import pandas as pd
 from datetime import datetime
 import re
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 import unicodedata
-import io
 import os
 
-# --- Konfigurācija ---
+## Šī ir app3.py bet cita kolonnu secība **
+
+# Konfigurācija
 st.set_page_config(
-    page_title="Llama OCR - teksta izvilkšana v6",
+    page_title="Llama OCR - teksta izvilkšana v4 (DEPO)",
     page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Paredzētais Groq atbildes kolonnu skaits (no prompt): 19
-EXPECTED_AI_COL_COUNT = 19
 
 default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu informāciju par produktiem.
 
@@ -31,13 +30,13 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Veids (Memorands) — izvēlies no saraksta, ja prece tam atbilst: Baltmaize, Rupjmaize, Piens (pasterizēts), Siers, Biezpiens, Sviests, Krējums, Jogurts, Kefīrs, Paniņas, Sīpoli, BurkāniĶiploki, Bietes, Tomāti, Gurķi, Galviņkāposti, Ziedkāposti, Lapu salāti, Ķirbji, Kabači, Kartupeļi, Āboli, Bumbieri, Zemenes, Dzērvenes, Brūklenes, Krūmmellenes, Jāņogas, Upenes, Avenes, Cūkgaļa, Cūkgaļa - malta, Mājputnu gaļa, Mājputnu gaļa (malta), Liellopu gaļa, Teļa gaļa, Aitu gaļa, Kazu gaļa, Zivis - svaigas, Zivis - atdzesētas, Kviešu milti, Pilngraudu milti, Griķi, Vistu olas, Olīveļļa, Rapšu eļļa, Saulespuķu eļļa; ja nē — atstāj tukšu lauku.
 - Preces nosaukums, info (veikalā) (arī ražotāja nosaukumu, ja ir).
 - Ražotāja valsts (ja ir).
-- Cena.
-- Cena ar atlaidi (ja ir).
+- Cena - cena, kas nav īpaši izcelta ar krāsu (šajā gadījumā – cena melnā krāsā bez fona).
+- Cena ar atlaidi - nav redzama, vienmēr atstāj tukšu.
 - Mērvienība (Grami, Kg, Litrs, Mililitri, Gab.) - norādi mērvienību, kas norādīta produkta nosaukumā.
 - Produkta vienība, piemēram, 0.5l ir 0.5.
-- Cena par vienību.
-- Cena ar klienta karti (ja ir).
-- Cena par vienību ar klienta karti (ja ir).
+- Cena par vienību - parasti blakus vai zem gabala cenas, sīks teksts.
+- Cena ar klienta karti (ja ir) - cena, kas atrodama uz dzeltena fona un blakus tai norādīts `ar DEPO karti`.
+- Cena par vienību ar klienta karti (ja ir) - parasti blakus vai zem kartes cenas, sīks teksts.
 - Grozs: tukšs lauks.
 - Groza redzamība: tukšs lauks.
 - Preces pieejamība veikalā: tukšs lauks.
@@ -46,6 +45,7 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Mērvienība par vienību (€/L, €/Kg, €/Gab.).
 
 **Rezultātu attēlo vienā horizontālā Markdown tabulā**:
+- Ignorēt cenu uz oranžā fona, kas attiecas uz vairāku preču pirkumu.
 - Nenorādi nekādas kolonnas ārpus šī saraksta.
 - Katra **rinda** ir viens produkts.
 - Katra **kolonna** ir viens no iepriekš minētajiem laukiem, tieši šādā secībā.
@@ -53,102 +53,130 @@ default_prompt = """Analizē cenu zīmes attēlā un izvelc strukturētu inform�
 - Ja prece atrodas starp memoranda grupām, tad Groza prece ir `1`. Visas pārējās preces ir `0`.
 - Norādot cenas, nelieto valūtas simbolus (piemēram, € vai EUR).
 - Cena: norādi standarta cenu pirms akcijas atlaides, bez lojalitātes kartes.
-- Atlaide: norādi tikai, ja ir norādīts cenas samazinājums procentos (%).
-- Ja cenu zīmē ir norādīta cena ar `Mans Rimi karti`, `Paldies karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
-- Svītrkods parasti ir izvietots zem vai pa labi no stabiņveida līnijām.
-- Piezīmēs norādi būtisku informāciju, kas varētu būt noderīga, piemēram, ja ir norādīta - atlaide (%), lojalitātes kartes nosaukumu.
+- Ja cenu zīmē ir norādīta cena ar `DEPO karti` vai citu lojalitātes karti, ievieto to `Cena ar klienta karti` un 'Cena par vienību ar klienta karti' laukos.
+- Svītrkods parasti ir izvietots blakus stabiņveida līnijām, cipari var būt sagriezti. Bieži sākas ar `475`, bet var būt arī cits sākums.
 """
 
-# --- Palīgfunkcijas ---
-
-def extract_datetime_from_metadata(image_data_bytes, filename):
-    """Izgūst datumu un laiku no attēla EXIF datiem vai faila nosaukuma."""
-    date_val = None
-    time_val = None
-    compression = None
-    make = None
-    model = None
-    
+# Palīgfunkcijas
+def extract_datetime_from_metadata(uploaded_file):
     try:
-        image = Image.open(BytesIO(image_data_bytes))
-        if image.getexif():
-            exif = {
-                ExifTags.TAGS.get(k, k): v for k, v in image.getexif().items()
-            }
-            dt_str = exif.get("DateTimeOriginal")
-            if dt_str is None:
-                dt_str = exif.get("DateTime")
-            
-            if dt_str:
-                try:
-                    dt = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
-                    date_val = dt.date()
-                    time_val = dt.time()
-                except ValueError:
-                    pass
-            
-            compression = exif.get("Compression", None)
-            make = exif.get("Make", None)
-            model = exif.get("Model", None)
-            
-        if date_val is None or time_val is None:
-            date_val_fname, time_val_fname = extract_datetime_from_filename(filename)
-            if date_val is None:
-                date_val = date_val_fname
-            if time_val is None:
-                time_val = time_val_fname
+        # Pārliecināmies, ka faila sākums tiek iestatīts uz 0, lai to pareizi nolasītu
+        uploaded_file.seek(0)
+
+        image = Image.open(uploaded_file)
+
+        # Pārbaudām, vai attēlam ir EXIF dati
+        if image.getexif() is None:
+            return None, None, None, None, None
         
+        exif = {
+            ExifTags.TAGS.get(k, k): v for k, v in image.getexif().items()
+        }
+
+        # Apple/iPhone un citi bieži izmanto "DateTimeOriginal"
+        dt_str = exif.get("DateTimeOriginal")
+
+        # Ja nav DateTimeOriginal, mēģinām izmantot "DateTime" (modifikācijas datums)
+        if dt_str is None:
+            dt_str = exif.get("DateTime")
+        
+        dt = None
+        if dt_str:
+            try:
+                # Standarta EXIF datuma/laika formāts
+                dt = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
+            except ValueError:
+                # Ja formāts ir cits, piemēram, nestandarta, var veikt papildu mēģinājumus šeit
+                pass
+
+        date_val = dt.date() if dt else None
+        time_val = dt.time() if dt else None
+            
+        # Iegūstam papildu metadatus
+        compression = exif.get("Compression", None)
+        make = exif.get("Make", None)        # Ražotājs (piemēram, Apple)
+        model = exif.get("Model", None)      # Modelis (piemēram, iPhone 15 Pro Max)
+            
+        # Atgriežam datumu, laiku, kompresiju, ražotāju un modeli
         return date_val, time_val, compression, make, model
     
-    except Exception:
-        date_val, time_val = extract_datetime_from_filename(filename)
-        return date_val, time_val, None, None, None
+    except Exception as e:
+        st.warning(f"EXIF kļūda: {e}")
+        return None, None, None, None, None
 
 def extract_datetime_from_filename(filename):
-    """Izgūst datumu un laiku no faila nosaukuma (YYYYMMDD_HHMMSS formāts)."""
     match = re.search(r"(\d{8})[_-](\d{6})", filename)
     if match:
         date_str, time_str = match.groups()
-        try:
-            dt = datetime.strptime(date_str + time_str, "%Y%m%d%H%M%S")
-            return dt.date(), dt.time()
-        except ValueError:
-            return None, None
+        dt = datetime.strptime(date_str + time_str, "%Y%m%d%H%M%S")
+        return dt.date(), dt.time()
     return None, None
 
-def resize_image_if_needed(image_data_bytes, max_size=(1024, 1024)):
-    """Samazina attēla izmēru, bet izlaiž PNG formātu. Strādā ar baitu masīvu."""
+# --- ATJAUNINĀTĀ process_image FUNKCIJA ---
+def process_image(uploaded_file, use_metadata, custom_prompt, employee, merchant, city, store_address, date_value, time_value, client):
     try:
-        image_stream = BytesIO(image_data_bytes)
-        image = Image.open(image_stream)
+        # Ielasām oriģinālā faila baitus
+        image_bytes = uploaded_file.getvalue()
+
+        # --- ATTĒLA SAMAZINĀŠANA (JAUNS KODS) ---
+        # Lai izvairītos no 413 "Request Entity Too Large" kļūdas,
+        # mēs samazinām attēlu pirms nosūtīšanas.
+
+        MAX_DIMENSION = 2048  # Maksimālais malas garums (platums vai augstums)
+        JPEG_QUALITY = 85     # Kvalitāte (samazina faila izmēru)
+
+        try:
+            # Atveram attēlu no atmiņas
+            img = Image.open(BytesIO(image_bytes))
+
+            # Pārbaudām un konvertējam, ja nepieciešams (piem., PNG ar caurspīdīgumu)
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
+            # Samazinām attēlu, saglabājot proporcijas (thumbnail maina pašu img objektu)
+            img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.Resampling.LANCZOS)
+
+            # Saglabājam samazināto attēlu jaunā atmiņas buferī kā JPEG
+            output_buffer = BytesIO()
+            img.save(output_buffer, format="JPEG", quality=JPEG_QUALITY)
+            
+            # Iegūstam samazinātā attēla baitus
+            resized_image_bytes = output_buffer.getvalue()
+            
+            # Turpmākajā apstrādē izmantojam samazinātos baitus
+            image_bytes = resized_image_bytes
         
-        if image.format == "PNG":
-            return image_data_bytes
+        except Exception as resize_e:
+            # Ja samazināšana neizdodas (piemēram, fails nav attēls),
+            # mēģināsim turpināt ar oriģinālo failu, bet paziņojam par to.
+            st.warning(f"Neizdevās samazināt attēlu {uploaded_file.name}: {resize_e}. Mēģina nosūtīt oriģinālo failu.")
+            # image_bytes jau satur oriģinālos baitus, tāpēc varam turpināt
+            pass
         
-        image.thumbnail(max_size, Image.LANCZOS)
-        buffer = io.BytesIO()
-        image.save(buffer, format="JPEG", quality=70, optimize=True)
-        return buffer.getvalue()
-        
-    except Exception:
-        return image_data_bytes
-    
-def process_image(image_data_bytes, filename, use_metadata, custom_prompt, employee, merchant, city, store_address, date_value, time_value, client):
-    """Veic attēla apstrādi un Groq API vaicājumu."""
-    try:
-        image_bytes = resize_image_if_needed(image_data_bytes)
+        # --- ATTĒLA SAMAZINĀŠANAS KODA BEIGAS ---
+
+        # Konvertējam (potenciāli samazinātos) attēla baitus uz base64
         base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
-        date_val = date_value
-        time_val = time_value
-        
+        # Iegūt datumu un laiku no EXIF, faila nosaukuma vai ievades
         if use_metadata:
-            date_val_exif, time_val_exif, _, _, _ = extract_datetime_from_metadata(image_data_bytes, filename)
+            date_val, time_val, compression, make, model = extract_datetime_from_metadata(uploaded_file)
             
-            if date_val_exif is not None or time_val_exif is not None:
-                date_val = date_val_exif
-                time_val = time_val_exif
+            if date_val is None or time_val is None:
+                date_val_fname, time_val_fname = extract_datetime_from_filename(uploaded_file.name)
+
+                if date_val is None:
+                    date_val = date_val_fname
+                if time_val is None:
+                    time_val = time_val_fname
+        else:
+            date_val = date_value
+            time_val = time_value
+            # Ja netiek izmantoti metadati, make un model ir None
+            make = None
+            model = None
         
+        # Formatējam datumu un laiku kā tekstu vai tukšu, ja nav
         date_str = date_val.strftime("%d.%m.%Y") if date_val else ""
         time_str = time_val.strftime("%H:%M") if time_val else ""
 
@@ -168,51 +196,12 @@ def process_image(image_data_bytes, filename, use_metadata, custom_prompt, emplo
         extracted_rows = []
 
         if len(lines) >= 3:
-            # Pārliecināmies, ka nav tukšas virsrakstu kolonnas
-            header = [h.strip().replace("**", "") for h in lines[0].strip("|").split("|") if h.strip()] 
-            
-            # Pārliecināmies, ka galvene atbilst sagaidītajam skaitam (19)
-            if len(header) != EXPECTED_AI_COL_COUNT:
-                st.warning(f"⚠️ {filename}: Uzvednes kolonnu skaits neatbilst izgūtajam virsrakstu skaitam ({len(header)}), turpinām ar {EXPECTED_AI_COL_COUNT}.")
-                # Ņemam tikai pirmās 19 galvenes, ja ir par daudz
-                header = header[:EXPECTED_AI_COL_COUNT] 
-
-
+            header = [h.strip().replace("**", "") for h in lines[0].strip("|").split("|")]
             for data_line in lines[2:]:
                 values = [v.strip() for v in data_line.strip("|").split("|")]
-                
-                # Noņemam visus tukšos elementus no sākuma un beigām, kas radušies no Markdown formāta |...|
-                # Šis ir svarīgs solis, lai iegūtu tikai reālās vērtības
-                values = [v for v in values if v or v == ""]
-                
-                # Jāpārliecinās, ka vērtību skaits nav lielāks par virsrakstu skaitu, 
-                # kas ir garantēts pēc header izveidošanas.
-                
-                current_col_count = len(values)
-
-                # --- KRITISKAIS LABOJUMS NEATBILSTĪBĀM ---
-                if current_col_count > EXPECTED_AI_COL_COUNT:
-                    # Ja kolonnu ir par daudz (piem., 20 > 19), liekos apvienojam pēdējā laukā
-                    target_col_index = EXPECTED_AI_COL_COUNT - 1 # Pēdējā kolonna (Piezīmes)
-                    
-                    # Apvienojam saturu no mērķa kolonas līdz beigām
-                    # target_col_index tiek ieskaitīts, jo elements values[target_col_index] ir Piezīmes sākotnējā vērtība
-                    combined_value = " | ".join(values[target_col_index:])
-                    
-                    # Atjaunojam values: pirmās 18 kolonas + apvienotā Piezīmes vērtība
-                    values = values[:target_col_index] + [combined_value]
-                    st.info(f"ℹ️ {filename}: Atrasts lieks datu lauks. Apvienojām lieko informāciju Piezīmēs.")
-                    
-                elif current_col_count < EXPECTED_AI_COL_COUNT:
-                    # Ja kolonnu ir par maz, pievienojam tukšas vērtības beigās (lai izvairītos no kļūdas)
-                    values = values + [""] * (EXPECTED_AI_COL_COUNT - current_col_count)
-                    st.warning(f"⚠️ {filename}: Rindā par maz kolonnu ({current_col_count}), pievienojam tukšas vērtības.")
-                
-                # --- LABOJUMA BEIGAS ---
-                
-                if len(values) == EXPECTED_AI_COL_COUNT:
+                if len(values) == len(header):
                     row = {
-                        "Fails": filename,
+                        "Fails": uploaded_file.name,
                         "Datums": date_str,
                         "Laiks": time_str,
                         "Darbinieks": employee,
@@ -220,27 +209,21 @@ def process_image(image_data_bytes, filename, use_metadata, custom_prompt, emplo
                         "Pilsēta": city,
                         "Veikals (nosaukums vai adrese)": store_address
                     }
-                    
-                    final_header = header[:EXPECTED_AI_COL_COUNT]
-                    for h, v in zip(final_header, values):
+                    for h, v in zip(header, values):
                         row[h] = v
                     extracted_rows.append(row)
-                else:
-                    # Šis gadījums vairs nedrīkstētu notikt
-                    st.error(f"❌ {filename}: Kritiska kļūda: Pēc labojuma joprojām neatbilst kolonnu skaits: {len(values)} vs {EXPECTED_AI_COL_COUNT}. Rinda ignorēta.")
-        
         return extracted_rows
 
     except Exception as e:
-        return [{"Fails": filename, "Kļūda": str(e)}]
+        # Tiek apstrādātas jebkuras kļūdas, ieskaitot API 413, ja samazināšana nebija pietiekama
+        return [{"Fails": uploaded_file.name, "Kļūda": str(e)}]
 
 # Noņem garumzīmes no darbinieka vārda
 def remove_diacritics(text):
-    """Noņem garumzīmes (diakritiskās zīmes) no teksta."""
     return ''.join(c for c in unicodedata.normalize('NFKD', text) if not unicodedata.combining(c))
 
-# --- UI ---
-st.title("🖼️ Teksta izvilkšana no attēliem")
+# UI
+st.title("🖼️ Teksta izvilkšana no attēliem (DEPO)")
 st.markdown("Ar **llama-4-scout-17b-16e-instruct** palīdzību izvelk produktus no attēliem un parāda salīdzināmā tabulā.")
 
 # Sānu josla
@@ -256,7 +239,7 @@ with st.sidebar:
         date_value = None
         time_value = None
 
-    merchant = st.selectbox("🏪 Tirgotājs", ["MAXIMA", "RIMI", "LIDL", "TOP", "ELVI", "DEPO", "NARVESEN"])
+    merchant = st.selectbox("🏪 Tirgotājs", ["MAXIMA", "RIMI", "LIDL", "TOP", "ELVI", "DEPO", "NARVESEN"], index=5)
     city = st.selectbox("🌆 Pilsēta", ["Rīga", "Piņķi", "Daugavpils", "Liepāja", "Jelgava", "Jaunolaine", "Olaine", "Valmiera"])
     store_address = st.text_input("📍 Veikala adrese (obligāti)", placeholder="Norādi veikala adresi vai nosaukumu")
     uploaded_files = st.file_uploader("🖼️ Izvēlies attēlus", type=None, accept_multiple_files=True)
@@ -267,7 +250,7 @@ st.subheader("📝 Uzvedne")
 with st.expander("Rediģēt uzvedni pirms apstrādes", expanded=False):
     custom_prompt = st.text_area("Uzvedne:", value=default_prompt, height=400)
 
-# --- Apstrādes cilpa (AR KRITISKO LABOJUMU) ---
+# Apstrāde bez ThreadPoolExecutor
 if process:
     if not employee.strip():
         st.warning("⚠️ Lūdzu, ievadi darbinieka vārdu!")
@@ -277,50 +260,38 @@ if process:
         st.warning("⚠️ Lūdzu, augšupielādē vismaz vienu attēlu!")
     else:
         st.session_state['ocr_table_rows'] = []
-        try:
-            if "API_KEY" not in st.secrets:
-                st.error("❌ API_KEY nav atrasta Streamlit 'secrets'.")
-                st.stop()
-                
-            client = Groq(api_key=st.secrets["API_KEY"])
+        client = Groq(api_key=st.secrets["API_KEY"])
 
-            progress_bar = st.progress(0)
-            total_files = len(uploaded_files)
-            processed_files = 0
+        progress_bar = st.progress(0)
+        total_files = len(uploaded_files)
+        processed_files = 0
 
-            for f in uploaded_files:
-                try:
-                    # KRITISKAIS LABOJUMS: Dubulta kursora atiestatīšana, lai nodrošinātu pirmo failu nolasīšanu
-                    f.seek(0) 
-                    file_bytes = f.read()
-                    file_name = f.name
-                    # Atiestatām kursoru vēlreiz, ja nu gadījumā Streamlit to maina pēdējā brīdī
-                    f.seek(0)
+        # --- LABOTS FUNKCIJAS IZSAUKUMS (PAREIZI 10 ARGUMENTI) ---
+        for f in uploaded_files:
+            result = process_image(
+                f,                     # 1
+                use_metadata,          # 2
+                custom_prompt,         # 3
+                employee,              # 4
+                merchant,              # 5
+                city,                  # 6
+                store_address,         # 7
+                date_value,            # 8
+                time_value,            # 9
+                client                 # 10
+            )
+            for row in result:
+                if "Kļūda" in row:
+                    st.error(f"{row['Fails']}: {row['Kļūda']}")
+                else:
+                    st.session_state['ocr_table_rows'].append(row)
 
-                    result = process_image(
-                        file_bytes, file_name, use_metadata, custom_prompt, employee,
-                        merchant, city, store_address, date_value, time_value, client
-                    )
-                    
-                    for row in result:
-                        if "Kļūda" in row:
-                            st.error(f"❌ {row['Fails']}: {row['Kļūda']}")
-                        else:
-                            st.session_state['ocr_table_rows'].append(row)
+            processed_files += 1
+            progress_percent = int((processed_files / total_files) * 100)
+            progress_bar.progress(progress_percent)
 
-                except Exception as e:
-                    st.error(f"❌ Neizdevās apstrādāt failu {f.name}: {e}")
-                
-                processed_files += 1
-                progress_percent = int((processed_files / total_files) * 100)
-                progress_bar.progress(progress_percent)
-
-            if progress_bar:
-                progress_bar.empty()
-        
-        except Exception as e:
-            st.error(f"Kritiska kļūda apstrādes laikā: {e}")
-
+        if progress_bar:
+            progress_bar.empty()
 
 # Notīrīšanas poga
 col_btn1, col_btn2 = st.columns([6, 1])
@@ -330,58 +301,38 @@ with col_btn2:
             del st.session_state['ocr_table_rows']
         st.rerun()
 
-# --- Tabula un lejupielāde ---
+# Tabula
 if 'ocr_table_rows' in st.session_state and st.session_state['ocr_table_rows']:
     df_all = pd.DataFrame(st.session_state['ocr_table_rows'])
 
-    # Decimālatdalītāja aizvietošana cenām un skaitliskajām vērtībām
+    # Decimālatdalītāja aizvietošana cenām
     cena_kolonnas = [
         "Cena", "Cena ar atlaidi", "Cena par vienību",
-        "Cena ar klienta karti", "Cena par vienību ar klienta karti", "Produkta vienība"
+        "Cena ar klienta karti", "Cena par vienību ar klienta karti"
     ]
     for kol in cena_kolonnas:
         if kol in df_all.columns:
             df_all[kol] = df_all[kol].astype(str).str.replace(',', '.', regex=False)
 
-    # Pievienojam trūkstošās kolonnas no prompt, ja Groq tās neizvelk
-    expected_columns = [
-        "Groza prece", "Kategorija (Memorands)", "Grupa (Memorands)", "Veids (Memorands)", 
-        "Preces nosaukums, info (veikalā)", "Ražotāja valsts", "Cena", "Cena ar atlaidi", 
-        "Mērvienība", "Produkta vienība", "Cena par vienību", "Cena ar klienta karti", 
-        "Cena par vienību ar klienta karti", "Grozs", "Groza redzamība", "Preces pieejamība veikalā", 
-        "Piezīmes", "Svītrkods", "Mērvienība par vienību (€/L, €/Kg, €/Gab.)"
-    ]
-    
-    for col in expected_columns:
-        if col not in df_all.columns:
-            df_all[col] = ""
-
-    # Pārsakārtojam kolonnas atbilstoši prasībām (metadati + prompt secība)
-    meta_cols = ["Fails", "Datums", "Laiks", "Darbinieks", "Tirgotājs", "Pilsēta", "Veikals (nosaukums vai adrese)"]
-    final_cols = meta_cols + expected_columns
-    
-    df_final = df_all[[col for col in final_cols if col in df_all.columns]]
-
     # Izveidojot dubulto virsrakstu (multi-index)
     double_header_map = {}
-    for col in df_final.columns:
+    for col in df_all.columns:
         if col in ["Datums", "Laiks", "Darbinieks"]:
             double_header_map[col] = "Pārbaude"
-        elif col in ["Tirgotājs", "Pilsēta", "Veikals (nosaukums vai adrese)", "Fails"]:
+        elif col in ["Tirgotājs", "Pilsēta", "Veikala adrese", "Fails"]:
             double_header_map[col] = ""
         else:
             double_header_map[col] = "Prece"
 
     multi_columns = pd.MultiIndex.from_tuples(
-        [(double_header_map[col], col) for col in df_final.columns]
+        [(double_header_map[col], col) for col in df_all.columns]
     )
-    df_final.columns = multi_columns
+    df_all.columns = multi_columns
 
     st.subheader("📊 Strukturēti dati")
-    st.dataframe(df_final)
+    st.dataframe(df_all)
 
-    # Datu sagatavošana lejupielādei (bez multi-index)
-    flat_df = df_final.copy()
+    flat_df = df_all.copy()
     flat_df.columns = [col[1] for col in flat_df.columns]
     
     # Izveido faila nosaukumu
