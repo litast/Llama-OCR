@@ -119,13 +119,13 @@ def resize_image_if_needed(uploaded_file, max_size=(1024, 1024)):
     try:
         image = Image.open(uploaded_file)
         
-        # Detect image format
+        # Nosaka attēla formātu
         if image.format == "PNG":
-            # Return original PNG bytes — no resizing
+            # Atgriež oriģinālos PNG baitus — bez izmēru maiņas
             uploaded_file.seek(0)
             return uploaded_file.read()
         
-        # For JPEG or others — resize
+        # JPEG vai citiem — maina izmēru
         image.thumbnail(max_size, Image.LANCZOS)
         buffer = io.BytesIO()
         image.save(buffer, format="JPEG", quality=70, optimize=True)
